@@ -23,6 +23,7 @@ struct ContentView: View {
                     }
                 }
             }
+            .refreshable(action: vm.fetchContacts)
             .navigationTitle("Contacts")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

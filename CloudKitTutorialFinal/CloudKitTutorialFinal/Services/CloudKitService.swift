@@ -9,7 +9,23 @@ import Foundation
 import CloudKit
 
 final class CLoudKitService {
-    private let container = CKContainer.default()
+    private let container = CKContainer(identifier: "YOUR_ICLOUD_CONTAINER_IDENTIFIER")
+    
+    func checkAccountStatus() async throws -> Result<Bool, Error> {
+        let accountStatus = try await container.accountStatus()
+        switch accountStatus {
+        case .available:
+            return .success(true)
+        case .restricted:
+            return .failure(CloudKitError.iCloudAccountRestricted)
+        case .noAccount:
+            return .failure(CloudKitError.iCloudAccountNotFound)
+        case .couldNotDetermine:
+            return .failure(CloudKitError.iCloudAccountNotDetermined)
+        default:
+            return .failure(CloudKitError.iCloudAccountUnknown)
+        }
+    }
         
     func fetch<T: CloudKitUploadable>(recordType: CKRecord.RecordType, resultLimits: Int? = nil) async throws -> [T] {
         
@@ -41,5 +57,12 @@ final class CLoudKitService {
     
     func delete(recordID: CKRecord.ID) async throws {
         _ = try await container.privateCloudDatabase.deleteRecord(withID: recordID)
+    }
+    
+    enum CloudKitError: LocalizedError {
+        case iCloudAccountNotFound
+        case iCloudAccountNotDetermined
+        case iCloudAccountRestricted
+        case iCloudAccountUnknown
     }
 }
